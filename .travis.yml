@@ -1,0 +1,24 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build - t shinhh/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true shinhh/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t shinhh/multi-client ./client
+  - docker build -t shinhh/multi-nginx ./nginx
+  - docker build -t shinhh/multi-server ./server
+  - docker build -t shinhh/multi-worker ./worker
+
+#Log in to the docker CLI
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# Take those images and push them to docker hub 
+- docker push shinhh/multi-client
+- docker push shinhh/multi-nginx
+- docker push shinhh/multi-server
+- docker push shinhh/multi-worker
